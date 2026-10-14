@@ -1,7 +1,3 @@
-// Retro CRT: screen curve, scanlines, horizontal scanline blur, RGB pixel mask and vignette.
-// OpenMW port of the post pass of "Retro Skyrim" by monobelisk (ENB, Skyrim SE, Nexus mod 38464).
-// Place it after retro.omwfx in the shader chain.
-
 uniform_int uResDiv {
     default = 5;
     min = 1;
@@ -61,6 +57,10 @@ uniform_float uPixelMaskStr {
 }
 
 fragment crt {
+    // Retro CRT: screen curve, scanlines, horizontal scanline blur, RGB pixel mask and vignette.
+    // OpenMW port of the post pass of "Retro Skyrim" by monobelisk (ENB, Skyrim SE, Nexus mod 38464).
+    // Place it after retro.omwfx in the shader chain.
+
     omw_In vec2 omw_TexCoord;
 
     const float CURVE = 0.1;

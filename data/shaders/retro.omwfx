@@ -1,7 +1,3 @@
-// Retro: pixelation, posterize / palette colour mapping and ordered dithering.
-// OpenMW port of "Retro Skyrim" by monobelisk (ENB, Skyrim SE, Nexus mod 38464).
-// Pair it with retro_crt.omwfx, placed after this shader, for the CRT look.
-
 uniform_int uPalette {
     default = 1;
     display_name = "Palette";
@@ -79,6 +75,10 @@ sampler_3d retroPalettes {
 }
 
 fragment retro {
+    // Retro: pixelation, posterize / palette colour mapping and ordered dithering.
+    // OpenMW port of "Retro Skyrim" by monobelisk (ENB, Skyrim SE, Nexus mod 38464).
+    // Pair it with retro_crt.omwfx, placed after this shader, for the CRT look.
+
     omw_In vec2 omw_TexCoord;
 
     // Number of palettes stacked in palettes.dds (see tools/make_palettes.py).
