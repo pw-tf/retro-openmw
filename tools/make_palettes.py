@@ -11,7 +11,10 @@ Cube layout: texel (x, y, z) = (red index, green index, blue index + 64 * slot).
 A 3D DDS is used because OpenMW never flips 3D textures on load, so the
 orientation is identical in every OpenMW version (2D PNGs are not).
 
-Requires numpy and Pillow:  python3 tools/make_palettes.py
+Retro Skyrim's own palettes (PAL, Deluxe Paint) are not regenerated: they are
+copied from the existing palettes.dds, so they must stay the first entries.
+
+Requires numpy:  python3 tools/make_palettes.py
 """
 
 import struct
@@ -19,10 +22,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = ROOT / "tools" / "source"
 OUTPUT = ROOT / "data" / "textures" / "retro" / "palettes.dds"
 
 SIZE = 64
@@ -38,10 +39,11 @@ def levels(r, g, b):
 
 
 # Order matters: it must match the uPalette choice list in data/shaders/retro.omwfx.
-# A Path entry is one of Retro Skyrim's own LUTs, copied verbatim.
+# ORIGINAL entries are Retro Skyrim's own LUTs, kept verbatim from the existing palettes.dds.
+ORIGINAL = None
 PALETTES = [
-    ("PAL (Retro Skyrim default)", SOURCE / "pal_lut.png"),
-    ("Deluxe Paint", SOURCE / "deluxe_paint_lut.png"),
+    ("PAL (Retro Skyrim default)", ORIGINAL),
+    ("Deluxe Paint", ORIGINAL),
     ("Game Boy", hexes("0f380f", "306230", "8bac0f", "9bbc0f")),
     ("Virtual Boy", hexes("000000", "550000", "aa0000", "ff0000")),
     ("Monochrome (4 greys)", hexes("000000", "555555", "aaaaaa", "ffffff")),
@@ -86,14 +88,17 @@ PALETTES = [
 ]
 
 
-def original_cube(path):
-    """A Retro Skyrim lut.png (4096x64) as a [b][g][r] cube.
+def original_cubes():
+    """Retro Skyrim's LUTs as [b][g][r] cubes, read from the current palettes.dds.
 
-    lut.png column = r + 64 * b, row = g, matching lutSample() in the ENB shader.
+    They were converted from Retro Skyrim's lut.png files (4096x64, column = r + 64 * b,
+    row = g, as in lutSample() in the ENB shader).
     """
-    img = np.asarray(Image.open(path).convert("RGB"))
-    assert img.shape == (SIZE, SIZE * SIZE, 3), img.shape
-    return img.reshape(SIZE, SIZE, SIZE, 3).transpose(1, 0, 2, 3)
+    data = OUTPUT.read_bytes()
+    depth = struct.unpack_from("<I", data, 24)[0]  # dwDepth
+    volume = np.frombuffer(data, np.uint8, offset=128).reshape(depth, SIZE, SIZE, 3)
+    count = sum(1 for _, colours in PALETTES if colours is ORIGINAL)
+    return [volume[i * SIZE : (i + 1) * SIZE] for i in range(count)]
 
 
 def palette_cube(colours):
@@ -136,9 +141,11 @@ def dds_volume_header(width, height, depth):
 
 
 def main():
+    originals = original_cubes()
+    assert all(colours is ORIGINAL for _, colours in PALETTES[: len(originals)]), "originals must come first"
     cubes = []
     for slot, (name, colours) in enumerate(PALETTES, start=1):
-        cube = original_cube(colours) if isinstance(colours, Path) else palette_cube(colours)
+        cube = originals[slot - 1] if colours is ORIGINAL else palette_cube(colours)
         count = len(np.unique(cube.reshape(-1, 3), axis=0))
         print(f"{slot:2d}  {name:28s} {count:3d} colours in LUT", file=sys.stderr)
         cubes.append(cube)

@@ -99,8 +99,9 @@ graphics at high resolutions.
 
 ## Rebuilding the palettes
 
-`tools/make_palettes.py` rebuilds `palettes.dds` from `tools/source/*.png` (Retro Skyrim's
-LUTs) and the palette list in the script. It needs Python 3 with `numpy` and `Pillow`:
+`tools/make_palettes.py` rebuilds `palettes.dds` from the palette list in the script. It
+copies Retro Skyrim's own palettes (PAL and Deluxe Paint) from the existing `palettes.dds`,
+so keep those two first in the list. It needs Python 3 with `numpy`:
 
 ```
 python3 tools/make_palettes.py
